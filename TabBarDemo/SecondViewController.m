@@ -21,6 +21,53 @@
 @synthesize fetchedResultsController = __fetchedResultsController;
 @synthesize managedObjectContext = __managedObjectContext;
 
+- (NSFetchedResultsController *) fetchedResultsController {
+
+	if (!__fetchedResultsController) {
+		
+		__fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:((^ {
+		
+			NSFetchRequest *fetchRequest = [[[NSFetchRequest alloc] init] autorelease];
+			fetchRequest.entity = [NSEntityDescription entityForName:@"Store" inManagedObjectContext:self.managedObjectContext];
+			fetchRequest.sortDescriptors = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"title" ascending:YES]];
+			return fetchRequest;
+			
+		})()) managedObjectContext:self.managedObjectContext sectionNameKeyPath:nil cacheName:nil];
+		
+	}
+	
+	return __fetchedResultsController;
+
+}
+
+- (NSManagedObjectContext *) managedObjectContext {
+
+	if (!__managedObjectContext) {
+	
+		__managedObjectContext = [[NSManagedObjectContext alloc] init];
+		
+		[__managedObjectContext setPersistentStoreCoordinator:((^ {
+		
+			NSURL *modelURL = [[NSBundle mainBundle] URLForResource:@"TabBarDemo" withExtension:@"momd"];
+			NSManagedObjectModel *model = [[[NSManagedObjectModel alloc] initWithContentsOfURL:modelURL] autorelease];
+			NSPersistentStoreCoordinator *coordinator = [[[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:model] autorelease];
+			NSString *documentsPath = [[NSSet setWithArray:NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES)] anyObject];
+			NSString *storePath = [[documentsPath stringByAppendingPathComponent:@"DataStore"] stringByAppendingPathExtension:@"sqlite"];
+			NSURL *storeURL = [NSURL fileURLWithPath:storePath];
+			NSError *addingError = nil;
+			if (![coordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&addingError])
+				NSLog(@"Error adding persistent store: %@", addingError);
+			
+			return coordinator;
+		
+		})())];
+	
+	}
+	
+	return __managedObjectContext;
+
+}
+
 - (void) saveData
 {
     // Create a new instance of the entity managed by the fetched results controller.
